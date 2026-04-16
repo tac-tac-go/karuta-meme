@@ -167,7 +167,7 @@ function App(): JSX.Element {
       </div>
       {isMobile && (
         <p className={styles.postHint}>
-          ※先に「シェア・保存」してからポストに添付してください
+          ※ ポストをするときは先に保存をしてからポストに添付してください
         </p>
       )}
     </div>
