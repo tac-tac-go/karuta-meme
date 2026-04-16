@@ -37,7 +37,9 @@ interface UseImageTransformReturn {
   }
 }
 
-export function useImageTransform(): UseImageTransformReturn {
+export function useImageTransform(onInteractionEnd?: () => void): UseImageTransformReturn {
+  const onInteractionEndRef = useRef(onInteractionEnd)
+  onInteractionEndRef.current = onInteractionEnd
   const containerRef = useRef<HTMLDivElement>(null)
   const imageRef = useRef<HTMLImageElement>(null)
   const [transform, setTransform] = useState<ImageTransform>({ zoom: 1, offsetX: 0, offsetY: 0 })
@@ -142,6 +144,7 @@ export function useImageTransform(): UseImageTransformReturn {
     const handleTouchEnd = (): void => {
       dragStateRef.current = null
       pinchStateRef.current = null
+      onInteractionEndRef.current?.()
     }
 
     container.addEventListener('wheel', handleWheel, { passive: false })
@@ -182,6 +185,7 @@ export function useImageTransform(): UseImageTransformReturn {
   const handleMouseUp = useCallback((): void => {
     isDraggingRef.current = false
     dragStateRef.current = null
+    onInteractionEndRef.current?.()
   }, [])
 
   return {

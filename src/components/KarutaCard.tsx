@@ -39,12 +39,13 @@ function buildWordSegments(word: string): WordSegment[] {
 
 interface KarutaCardProps {
   formData: KarutaFormData
+  onTransformSettle?: () => void
 }
 
 const KarutaCard = forwardRef<HTMLDivElement, KarutaCardProps>(
-  function KarutaCard({ formData }, ref) {
+  function KarutaCard({ formData, onTransformSettle }, ref) {
     const { transform, containerRef, imageRef, handleImageLoad, mouseHandlers } =
-      useImageTransform()
+      useImageTransform(onTransformSettle)
 
     const hasImage = formData.imagePreviewUrl !== null
 
