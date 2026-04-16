@@ -148,21 +148,28 @@ function App(): JSX.Element {
   ): JSX.Element => {
     const fileName = buildFileName(key === 'karuta' ? 'karuta_1' : 'karuta_2')
     return (
-    <div className={styles.buttonRow}>
-      <button
-        className={styles.shareButton}
-        onClick={() => shareCard(ref.current!, formData.word)}
-        disabled={isbusy}
-      >
-        <XIcon />ポスト
-      </button>
-      <button
-        className={styles.saveButton}
-        onClick={isMobile ? () => handleShare(blobRef, fileName) : () => handleSave(ref, key)}
-        disabled={isbusy}
-      >
-        {cardAction === `${key}-save` ? '保存中…' : isMobile ? 'シェア・保存' : '保存'}
-      </button>
+    <div className={styles.cardButtonArea}>
+      <div className={styles.buttonRow}>
+        <button
+          className={styles.shareButton}
+          onClick={() => shareCard(ref.current!, formData.word)}
+          disabled={isbusy}
+        >
+          <XIcon />ポスト
+        </button>
+        <button
+          className={styles.saveButton}
+          onClick={isMobile ? () => handleShare(blobRef, fileName) : () => handleSave(ref, key)}
+          disabled={isbusy}
+        >
+          {cardAction === `${key}-save` ? '保存中…' : isMobile ? 'シェア・保存' : '保存'}
+        </button>
+      </div>
+      {isMobile && (
+        <p className={styles.postHint}>
+          ※先に「シェア・保存」してからポストに添付してください
+        </p>
+      )}
     </div>
     )
   }
