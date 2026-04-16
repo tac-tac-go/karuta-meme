@@ -64,9 +64,8 @@ function App(): JSX.Element {
     }
   }, [formData.imagePreviewUrl])
 
-  // フォーム変更時に事前生成（モバイルのみ）
+  // フォーム変更時に事前生成（PC・モバイル共通）
   useEffect(() => {
-    if (!isMobile) return
     const timer = setTimeout(() => regenerateBlobs(), 500)
     return () => clearTimeout(timer)
   }, [formData, regenerateBlobs])
@@ -79,53 +78,49 @@ function App(): JSX.Element {
 
   // 画像ドラッグ/ズーム完了後に再生成
   const handleTransformSettle = useCallback(() => {
-    if (isMobile) regenerateBlobs()
+    regenerateBlobs()
   }, [regenerateBlobs])
 
   const buildFileName = (prefix: string): string =>
     `${prefix}_${formData.word || 'karuta'}.png`
 
-  // モバイル: 事前生成済み Blob を使い await なしで clipboard.write() を呼ぶ
-  const handleMobileShare = (blobRef: React.MutableRefObject<Blob | null>): void => {
+  // 事前生成済み Blob を使い await なしで呼ぶ（ユーザーアクティベーション保持）
+  // モバイル: navigator.share でネイティブシェアシート
+  // PC: クリップボードにコピー
+  const handleShare = (
+    blobRef: React.MutableRefObject<Blob | null>,
+    fileName: string,
+  ): void => {
     const blob = blobRef.current
     if (blob === null) {
       setToast('生成中です。少し待ってから再度タップしてください')
       return
     }
-    navigator.clipboard
-      .write([new ClipboardItem({ 'image/png': blob })])
-      .then(() => setToast('クリップボードにコピーしました'))
-      .catch(() => setToast('コピーに失敗しました'))
-  }
 
-  // PC: 生成してからコピー（await OK）
-  const handlePCShare = async (
-    ref: React.RefObject<HTMLDivElement>,
-    key: 'karuta' | 'desc',
-  ): Promise<void> => {
-    if (ref.current === null) return
-    setCardAction(`${key}-share`)
-    try {
-      const dataUrl = await generateCardPng(ref.current)
-      const blob = await fetch(dataUrl).then((r) => r.blob())
-      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
-      setToast('クリップボードにコピーしました')
-    } catch {
-      setToast('コピーに失敗しました')
-    } finally {
-      setCardAction(null)
-    }
-  }
-
-  const handleShare = (
-    ref: React.RefObject<HTMLDivElement>,
-    blobRef: React.MutableRefObject<Blob | null>,
-    key: 'karuta' | 'desc',
-  ): void => {
     if (isMobile) {
-      handleMobileShare(blobRef)
+      if (!navigator.share) {
+        setToast('このブラウザはシェアに対応していません')
+        return
+      }
+      const file = new File([blob], fileName, { type: 'image/png' })
+      navigator.share({ files: [file] }).catch((err: unknown) => {
+        if (err instanceof Error && err.name !== 'AbortError') {
+          setToast('シェアに失敗しました')
+        }
+      })
     } else {
-      void handlePCShare(ref, key)
+      if (!navigator.clipboard || !window.ClipboardItem) {
+        setToast('このブラウザはコピーに対応していません')
+        return
+      }
+      try {
+        navigator.clipboard
+          .write([new ClipboardItem({ 'image/png': blob })])
+          .then(() => setToast('クリップボードにコピーしました'))
+          .catch(() => setToast('コピーに失敗しました'))
+      } catch {
+        setToast('コピーに失敗しました')
+      }
     }
   }
 
@@ -150,7 +145,9 @@ function App(): JSX.Element {
     ref: React.RefObject<HTMLDivElement>,
     blobRef: React.MutableRefObject<Blob | null>,
     key: 'karuta' | 'desc',
-  ): JSX.Element => (
+  ): JSX.Element => {
+    const fileName = buildFileName(key === 'karuta' ? 'karuta_1' : 'karuta_2')
+    return (
     <div className={styles.buttonRow}>
       <button
         className={styles.shareButton}
@@ -159,13 +156,15 @@ function App(): JSX.Element {
       >
         <XIcon />ポスト
       </button>
-      <button
-        className={styles.nativeShareButton}
-        onClick={() => handleShare(ref, blobRef, key)}
-        disabled={isbusy && cardAction === `${key}-share`}
-      >
-        {cardAction === `${key}-share` ? '処理中…' : 'シェア'}
-      </button>
+      {isMobile && (
+        <button
+          className={styles.nativeShareButton}
+          onClick={() => handleShare(blobRef, fileName)}
+          disabled={isbusy}
+        >
+          シェア
+        </button>
+      )}
       <button
         className={styles.saveButton}
         onClick={() => handleSave(ref, key)}
@@ -174,7 +173,8 @@ function App(): JSX.Element {
         {cardAction === `${key}-save` ? '保存中…' : '保存'}
       </button>
     </div>
-  )
+    )
+  }
 
   return (
     <div className={styles.page}>

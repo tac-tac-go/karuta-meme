@@ -1,7 +1,7 @@
 .card {
   position: relative;
-  width: 280px;
-  height: 420px;
+  width: 220px;
+  height: 330px;
   box-sizing: border-box;
   border: 8px solid #2d6a2d;
   background-color: #ffffff;
@@ -9,6 +9,13 @@
   cursor: grab;
   flex-shrink: 0;
   touch-action: none;
+}
+
+@media (min-width: 600px) {
+  .card {
+    width: 280px;
+    height: 420px;
+  }
 }
 
 .card:active {
@@ -32,10 +39,10 @@
 
 .initialBadge {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 72px;
-  height: 72px;
+  top: 8px;
+  right: 8px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.6);
   border: 2px solid #fff;
@@ -43,19 +50,29 @@
   align-items: center;
   justify-content: center;
   font-family: 'Rampart One', cursive;
-  font-size: 40px;
+  font-size: 30px;
   color: #fff;
   pointer-events: none;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
 }
 
+@media (min-width: 600px) {
+  .initialBadge {
+    top: 10px;
+    right: 10px;
+    width: 72px;
+    height: 72px;
+    font-size: 40px;
+  }
+}
+
 .wordVertical {
   position: absolute;
-  right: 12px;
-  top: 90px;
+  right: 10px;
+  top: 72px;
   writing-mode: vertical-rl;
   font-family: 'Rampart One', cursive;
-  font-size: 46px;
+  font-size: 36px;
   color: #fff;
   line-height: 1.1;
   pointer-events: none;
@@ -63,8 +80,17 @@
     0 0 6px rgba(0, 0, 0, 1),
     0 0 6px rgba(0, 0, 0, 1),
     0 0 12px rgba(0, 0, 0, 0.8);
-  max-height: 360px;
+  max-height: 280px;
   overflow: hidden;
+}
+
+@media (min-width: 600px) {
+  .wordVertical {
+    right: 12px;
+    top: 90px;
+    font-size: 46px;
+    max-height: 360px;
+  }
 }
 
 .wordSegment {

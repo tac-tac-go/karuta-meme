@@ -50,16 +50,20 @@
 @media (min-width: 900px) {
   .main {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    align-items: center;
+    grid-template-columns: auto 1fr;
+    align-items: start;
     gap: 3rem;
     padding: 2.5rem 3rem;
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
   }
 
   .previewSection {
-    justify-content: center;
+    justify-content: flex-start;
+  }
+
+  .cardsRow {
+    flex-wrap: nowrap;
   }
 }
 

@@ -1,13 +1,20 @@
 .card {
   display: flex;
   flex-direction: column;
-  width: 280px;
-  height: 420px;
+  width: 220px;
+  height: 330px;
   box-sizing: border-box;
   border: 8px solid #2d6a2d;
   background-color: #1a1a2e;
   overflow: hidden;
   flex-shrink: 0;
+}
+
+@media (min-width: 600px) {
+  .card {
+    width: 280px;
+    height: 420px;
+  }
 }
 
 .header {

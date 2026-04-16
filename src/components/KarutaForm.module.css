@@ -53,22 +53,106 @@
   font-weight: bold;
 }
 
-.fileInput {
-  font-size: 1rem;
-  cursor: pointer;
+.fileInputHidden {
+  display: none;
 }
 
-.checkboxRow {
+.imageDropZone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  min-height: 140px;
+  border: 2px dashed #9ab89a;
+  border-radius: 8px;
+  background: rgba(45, 106, 45, 0.06);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  padding: 1.25rem;
+  overflow: hidden;
+}
+
+.imageDropZone:hover {
+  background: rgba(45, 106, 45, 0.12);
+  border-color: #2d6a2d;
+}
+
+.cameraIcon {
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.imageDropZoneText {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #555;
+}
+
+.imagePreviewThumb {
+  max-width: 100%;
+  max-height: 200px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.imageResetRow {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
-.checkboxLabel {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #333;
+.imageResetButton {
+  font-size: 0.875rem;
+  color: #666;
+  background: none;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+  padding: 0.375rem 0.75rem;
   cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.imageResetButton:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.imageResetConfirmText {
+  font-size: 0.875rem;
+  color: #c0392b;
+  font-weight: 600;
+}
+
+.imageResetConfirmButton {
+  font-size: 0.875rem;
+  color: #fff;
+  background: #c0392b;
+  border: none;
+  border-radius: 4px;
+  padding: 0.375rem 0.75rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.imageResetConfirmButton:hover {
+  background: #a93226;
+}
+
+.imageResetCancelButton {
+  font-size: 0.875rem;
+  color: #555;
+  background: none;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+  padding: 0.375rem 0.75rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.imageResetCancelButton:hover {
+  background: #f0f0f0;
 }
 
 .optionalHint {
@@ -76,11 +160,99 @@
   color: #888;
 }
 
+/* 解説文パネル */
+.descriptionPanel {
+  border: 2px solid #e8a020;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.descriptionPanelHeader {
+  background: linear-gradient(135deg, #fff8e6 0%, #fef3d0 100%);
+  border-bottom: 1px solid #f0c060;
+  padding: 0.875rem 1rem 0.625rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.descriptionPanelTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.descriptionPanelIcon {
+  font-size: 1.125rem;
+  line-height: 1;
+}
+
+.descriptionPanelTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #7a4a00;
+  flex: 1;
+}
+
+.descriptionPanelHint {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: #9a6600;
+  line-height: 1.4;
+}
+
+/* トグルスイッチ */
+.descriptionToggleLabel {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.descriptionToggleInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.descriptionToggleTrack {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+  border-radius: 11px;
+  background: #ccc;
+  transition: background 0.2s;
+}
+
+.descriptionToggleInput:checked + .descriptionToggleTrack {
+  background: #e8a020;
+}
+
+.descriptionToggleThumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s;
+}
+
+.descriptionToggleInput:checked + .descriptionToggleTrack .descriptionToggleThumb {
+  transform: translateX(18px);
+}
+
 .descriptionWrapper {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  margin-top: 0.375rem;
+  padding: 0.75rem;
+  background: #fff;
 }
 
 .textarea {
