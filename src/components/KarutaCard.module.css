@@ -53,31 +53,33 @@
   position: absolute;
   right: 12px;
   top: 90px;
-  writing-mode: vertical-rl;
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: flex-start;
   font-family: 'Rampart One', cursive;
   font-size: 46px;
-  color: #1a1a1a;
+  color: #fff;
   line-height: 1.1;
   pointer-events: none;
   text-shadow:
-    -3px -3px 0 #fff,
-     0   -3px 0 #fff,
-     3px -3px 0 #fff,
-     3px  0   0 #fff,
-     3px  3px 0 #fff,
-     0    3px 0 #fff,
-    -3px  3px 0 #fff,
-    -3px  0   0 #fff;
+    -2px -2px 0 #000,
+     0   -2px 0 #000,
+     2px -2px 0 #000,
+     2px  0   0 #000,
+     2px  2px 0 #000,
+     0    2px 0 #000,
+    -2px  2px 0 #000,
+    -2px  0   0 #000;
   max-height: 360px;
   overflow: hidden;
 }
 
 .wordSegment {
-  display: block;
+  writing-mode: vertical-rl;
 }
 
 .wordSegmentSpacer {
-  display: block;
+  writing-mode: vertical-rl;
   color: transparent;
   text-shadow: none;
 }
