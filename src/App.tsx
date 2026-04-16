@@ -36,6 +36,27 @@ function App(): JSX.Element {
   const descCardRef = useRef<HTMLDivElement>(null)
   const previewSectionRef = useRef<HTMLDivElement>(null)
 
+  // モバイル用：事前生成 Blob（ユーザーアクティベーション切れ対策）
+  const karutaBlobRef = useRef<Blob | null>(null)
+  const descBlobRef = useRef<Blob | null>(null)
+
+  const regenerateBlobs = useCallback(async () => {
+    karutaBlobRef.current = null
+    descBlobRef.current = null
+    if (karutaCardRef.current) {
+      try {
+        const dataUrl = await generateCardPng(karutaCardRef.current)
+        karutaBlobRef.current = await fetch(dataUrl).then((r) => r.blob())
+      } catch { /* ignore */ }
+    }
+    if (descCardRef.current) {
+      try {
+        const dataUrl = await generateCardPng(descCardRef.current)
+        descBlobRef.current = await fetch(dataUrl).then((r) => r.blob())
+      } catch { /* ignore */ }
+    }
+  }, [])
+
   useEffect(() => {
     if (formData.imagePreviewUrl === null) return
     if (isMobile) {
@@ -43,18 +64,42 @@ function App(): JSX.Element {
     }
   }, [formData.imagePreviewUrl])
 
+  // フォーム変更時に事前生成（モバイルのみ）
+  useEffect(() => {
+    if (!isMobile) return
+    const timer = setTimeout(() => regenerateBlobs(), 500)
+    return () => clearTimeout(timer)
+  }, [formData, regenerateBlobs])
+
   useEffect(() => {
     if (toast === null) return
     const timer = setTimeout(() => setToast(null), 3000)
     return () => clearTimeout(timer)
   }, [toast])
 
-  const handleTransformSettle = useCallback(() => {}, [])
+  // 画像ドラッグ/ズーム完了後に再生成
+  const handleTransformSettle = useCallback(() => {
+    if (isMobile) regenerateBlobs()
+  }, [regenerateBlobs])
 
   const buildFileName = (prefix: string): string =>
     `${prefix}_${formData.word || 'karuta'}.png`
 
-  const handleShare = async (
+  // モバイル: 事前生成済み Blob を使い await なしで clipboard.write() を呼ぶ
+  const handleMobileShare = (blobRef: React.MutableRefObject<Blob | null>): void => {
+    const blob = blobRef.current
+    if (blob === null) {
+      setToast('生成中です。少し待ってから再度タップしてください')
+      return
+    }
+    navigator.clipboard
+      .write([new ClipboardItem({ 'image/png': blob })])
+      .then(() => setToast('クリップボードにコピーしました'))
+      .catch(() => setToast('コピーに失敗しました'))
+  }
+
+  // PC: 生成してからコピー（await OK）
+  const handlePCShare = async (
     ref: React.RefObject<HTMLDivElement>,
     key: 'karuta' | 'desc',
   ): Promise<void> => {
@@ -69,6 +114,18 @@ function App(): JSX.Element {
       setToast('コピーに失敗しました')
     } finally {
       setCardAction(null)
+    }
+  }
+
+  const handleShare = (
+    ref: React.RefObject<HTMLDivElement>,
+    blobRef: React.MutableRefObject<Blob | null>,
+    key: 'karuta' | 'desc',
+  ): void => {
+    if (isMobile) {
+      handleMobileShare(blobRef)
+    } else {
+      void handlePCShare(ref, key)
     }
   }
 
@@ -91,6 +148,7 @@ function App(): JSX.Element {
 
   const renderCardButtons = (
     ref: React.RefObject<HTMLDivElement>,
+    blobRef: React.MutableRefObject<Blob | null>,
     key: 'karuta' | 'desc',
   ): JSX.Element => (
     <div className={styles.buttonRow}>
@@ -103,8 +161,8 @@ function App(): JSX.Element {
       </button>
       <button
         className={styles.nativeShareButton}
-        onClick={() => handleShare(ref, key)}
-        disabled={isbusy}
+        onClick={() => handleShare(ref, blobRef, key)}
+        disabled={isbusy && cardAction === `${key}-share`}
       >
         {cardAction === `${key}-share` ? '処理中…' : 'シェア'}
       </button>
@@ -136,12 +194,12 @@ function App(): JSX.Element {
                 formData={formData}
                 onTransformSettle={handleTransformSettle}
               />
-              {renderCardButtons(karutaCardRef, 'karuta')}
+              {renderCardButtons(karutaCardRef, karutaBlobRef, 'karuta')}
             </div>
             {showDescCard && (
               <div className={styles.cardWrapper}>
                 <DescriptionCard ref={descCardRef} formData={formData} />
-                {renderCardButtons(descCardRef, 'desc')}
+                {renderCardButtons(descCardRef, descBlobRef, 'desc')}
               </div>
             )}
           </div>
