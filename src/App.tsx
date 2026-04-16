@@ -161,7 +161,7 @@ function App(): JSX.Element {
         onClick={isMobile ? () => handleShare(blobRef, fileName) : () => handleSave(ref, key)}
         disabled={isbusy}
       >
-        {cardAction === `${key}-save` ? '保存中…' : '保存'}
+        {cardAction === `${key}-save` ? '保存中…' : isMobile ? 'シェア・保存' : '保存'}
       </button>
     </div>
     )
