@@ -36,10 +36,6 @@ function App(): JSX.Element {
   const descCardRef = useRef<HTMLDivElement>(null)
   const previewSectionRef = useRef<HTMLDivElement>(null)
 
-  // モバイル用：事前生成した PNG Blob をキャッシュ
-  const karutaBlobRef = useRef<Blob | null>(null)
-  const descBlobRef = useRef<Blob | null>(null)
-
   useEffect(() => {
     if (formData.imagePreviewUrl === null) return
     if (isMobile) {
@@ -53,69 +49,12 @@ function App(): JSX.Element {
     return () => clearTimeout(timer)
   }, [toast])
 
-  // PNG を再生成してキャッシュする
-  const regenerateBlobs = useCallback(async () => {
-    karutaBlobRef.current = null
-    descBlobRef.current = null
-
-    if (karutaCardRef.current) {
-      try {
-        const dataUrl = await generateCardPng(karutaCardRef.current)
-        const blob = await fetch(dataUrl).then((r) => r.blob())
-        karutaBlobRef.current = blob
-      } catch { /* ignore */ }
-    }
-
-    if (descCardRef.current) {
-      try {
-        const dataUrl = await generateCardPng(descCardRef.current)
-        const blob = await fetch(dataUrl).then((r) => r.blob())
-        descBlobRef.current = blob
-      } catch { /* ignore */ }
-    }
-  }, [])
-
-  // フォーム変更時に事前生成（300ms デバウンス）
-  useEffect(() => {
-    if (!isMobile) return
-    const timer = setTimeout(() => { regenerateBlobs() }, 300)
-    return () => clearTimeout(timer)
-  }, [formData, regenerateBlobs])
-
-  // 画像ドラッグ/ズーム終了時にも再生成
-  const handleTransformSettle = useCallback(() => {
-    if (!isMobile) return
-    regenerateBlobs()
-  }, [regenerateBlobs])
+  const handleTransformSettle = useCallback(() => {}, [])
 
   const buildFileName = (prefix: string): string =>
     `${prefix}_${formData.word || 'karuta'}.png`
 
-  // モバイル: await ゼロで navigator.share() を呼ぶ（ユーザージェスチャー保持）
-  const mobileShare = (blobRef: React.MutableRefObject<Blob | null>, fileName: string): void => {
-    const blob = blobRef.current
-    if (blob === null) {
-      setToast('画像を生成中です。少し待ってから再度タップしてください')
-      return
-    }
-    if (typeof navigator.share !== 'function') {
-      setToast('このブラウザはシェア機能に対応していません')
-      return
-    }
-    const file = new File([blob], fileName, { type: 'image/png' })
-    if (typeof navigator.canShare === 'function' && !navigator.canShare({ files: [file] })) {
-      setToast('このブラウザは画像のシェアに対応していません')
-      return
-    }
-    navigator.share({ files: [file] }).catch((err: unknown) => {
-      if (err instanceof Error && err.name !== 'AbortError') {
-        setToast(`シェアエラー: ${err instanceof Error ? err.message : String(err)}`)
-      }
-    })
-  }
-
-  // PC: クリップボードにコピー
-  const handlePCShare = async (
+  const handleShare = async (
     ref: React.RefObject<HTMLDivElement>,
     key: 'karuta' | 'desc',
   ): Promise<void> => {
@@ -127,14 +66,13 @@ function App(): JSX.Element {
       await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
       setToast('クリップボードにコピーしました')
     } catch {
-      downloadPng(await generateCardPng(ref.current), buildFileName(key === 'karuta' ? 'karuta_1' : 'karuta_2'))
+      setToast('コピーに失敗しました')
     } finally {
       setCardAction(null)
     }
   }
 
-  // PC: ダウンロード
-  const handlePCSave = async (
+  const handleSave = async (
     ref: React.RefObject<HTMLDivElement>,
     key: 'karuta' | 'desc',
   ): Promise<void> => {
@@ -153,42 +91,32 @@ function App(): JSX.Element {
 
   const renderCardButtons = (
     ref: React.RefObject<HTMLDivElement>,
-    blobRef: React.MutableRefObject<Blob | null>,
     key: 'karuta' | 'desc',
-  ): JSX.Element => {
-    const fileName = buildFileName(key === 'karuta' ? 'karuta_1' : 'karuta_2')
-    return (
-      <div className={styles.buttonRow}>
-        <button
-          className={styles.shareButton}
-          onClick={() => shareCard(ref.current!, formData.word)}
-          disabled={isbusy}
-        >
-          <XIcon />ポスト
-        </button>
-        <button
-          className={styles.nativeShareButton}
-          onClick={isMobile
-            ? () => mobileShare(blobRef, fileName)
-            : () => handlePCShare(ref, key)
-          }
-          disabled={isbusy}
-        >
-          {cardAction === `${key}-share` ? '処理中…' : 'シェア'}
-        </button>
-        <button
-          className={styles.saveButton}
-          onClick={isMobile
-            ? () => mobileShare(blobRef, fileName)
-            : () => handlePCSave(ref, key)
-          }
-          disabled={isbusy}
-        >
-          {cardAction === `${key}-save` ? '保存中…' : '保存'}
-        </button>
-      </div>
-    )
-  }
+  ): JSX.Element => (
+    <div className={styles.buttonRow}>
+      <button
+        className={styles.shareButton}
+        onClick={() => shareCard(ref.current!, formData.word)}
+        disabled={isbusy}
+      >
+        <XIcon />ポスト
+      </button>
+      <button
+        className={styles.nativeShareButton}
+        onClick={() => handleShare(ref, key)}
+        disabled={isbusy}
+      >
+        {cardAction === `${key}-share` ? '処理中…' : 'シェア'}
+      </button>
+      <button
+        className={styles.saveButton}
+        onClick={() => handleSave(ref, key)}
+        disabled={isbusy}
+      >
+        {cardAction === `${key}-save` ? '保存中…' : '保存'}
+      </button>
+    </div>
+  )
 
   return (
     <div className={styles.page}>
@@ -208,12 +136,12 @@ function App(): JSX.Element {
                 formData={formData}
                 onTransformSettle={handleTransformSettle}
               />
-              {renderCardButtons(karutaCardRef, karutaBlobRef, 'karuta')}
+              {renderCardButtons(karutaCardRef, 'karuta')}
             </div>
             {showDescCard && (
               <div className={styles.cardWrapper}>
                 <DescriptionCard ref={descCardRef} formData={formData} />
-                {renderCardButtons(descCardRef, descBlobRef, 'desc')}
+                {renderCardButtons(descCardRef, 'desc')}
               </div>
             )}
           </div>
