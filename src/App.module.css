@@ -134,10 +134,65 @@
   background: #555;
 }
 
+.nativeShareButton {
+  padding: 0.625rem 1.25rem;
+  font-size: 1rem;
+  font-weight: bold;
+  color: #fff;
+  background: #1a6fa8;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.nativeShareButton:hover {
+  background: #2080c0;
+}
+
+.nativeShareButton:active {
+  background: #145580;
+}
+
+.nativeShareButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.82);
+  color: #fff;
+  font-size: 0.9rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: 999px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 200;
+}
+
+.nativeShareButton:hover {
+  background: #2080c0;
+}
+
+.nativeShareButton:active {
+  background: #145580;
+}
+
+.nativeShareButton:disabled {
+  background: #3a6a8a;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
 .buttonRow {
   display: flex;
   gap: 0.5rem;
   justify-content: center;
+  flex-wrap: wrap;
 }
 
 .footer {
@@ -225,3 +280,4 @@
   color: rgba(255, 255, 255, 0.8);
   text-align: center;
 }
+

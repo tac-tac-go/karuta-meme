@@ -3,8 +3,12 @@ import styles from './App.module.css'
 import DescriptionCard from './components/DescriptionCard'
 import KarutaCard from './components/KarutaCard'
 import KarutaForm from './components/KarutaForm'
-import { exportCardAsPng, shareCard } from './hooks/useCardExport'
+import { downloadPng, generateCardPng, shareCard } from './hooks/useCardExport'
 import type { KarutaFormData } from './types/karuta'
+
+type CardAction = 'karuta-share' | 'karuta-save' | 'desc-share' | 'desc-save' | null
+
+const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
 
 const initialFormData: KarutaFormData = {
   initial: '',
@@ -23,46 +27,127 @@ function XIcon(): JSX.Element {
   )
 }
 
+async function nativeShare(blob: Blob, fileName: string): Promise<boolean> {
+  if (typeof navigator.share !== 'function') return false
+  const file = new File([blob], fileName, { type: 'image/png' })
+  try {
+    await navigator.share({ files: [file] })
+    return true
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') return true
+    return false
+  }
+}
 
 function App(): JSX.Element {
   const [formData, setFormData] = useState<KarutaFormData>(initialFormData)
-  const [savingCard, setSavingCard] = useState<'karuta' | 'desc' | null>(null)
+  const [cardAction, setCardAction] = useState<CardAction>(null)
+  const [toast, setToast] = useState<string | null>(null)
   const karutaCardRef = useRef<HTMLDivElement>(null)
   const descCardRef = useRef<HTMLDivElement>(null)
   const previewSectionRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (formData.imagePreviewUrl === null) return
-    if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+    if (isMobile) {
       previewSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
   }, [formData.imagePreviewUrl])
 
-  const handleSaveKarutaCard = async (): Promise<void> => {
-    if (karutaCardRef.current === null) return
-    setSavingCard('karuta')
-    await exportCardAsPng(karutaCardRef.current, `karuta_1_${formData.word}.png`)
-    setSavingCard(null)
+  useEffect(() => {
+    if (toast === null) return
+    const timer = setTimeout(() => setToast(null), 3000)
+    return () => clearTimeout(timer)
+  }, [toast])
+
+  const buildFileName = (prefix: string): string =>
+    `${prefix}_${formData.word || 'karuta'}.png`
+
+  const handleShare = async (
+    ref: React.RefObject<HTMLDivElement>,
+    key: 'karuta' | 'desc',
+  ): Promise<void> => {
+    if (ref.current === null) return
+    setCardAction(`${key}-share`)
+    try {
+      const dataUrl = await generateCardPng(ref.current)
+      const fileName = buildFileName(key === 'karuta' ? 'karuta_1' : 'karuta_2')
+      const res = await fetch(dataUrl)
+      const blob = await res.blob()
+
+      if (isMobile) {
+        const shared = await nativeShare(blob, fileName)
+        if (!shared) downloadPng(dataUrl, fileName)
+        return
+      }
+
+      // PC: クリップボードにコピー
+      try {
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+        setToast('クリップボードにコピーしました')
+      } catch {
+        downloadPng(dataUrl, fileName)
+      }
+    } finally {
+      setCardAction(null)
+    }
   }
 
-  const handleSaveDescCard = async (): Promise<void> => {
-    if (descCardRef.current === null) return
-    setSavingCard('desc')
-    await exportCardAsPng(descCardRef.current, `karuta_2_${formData.word}.png`)
-    setSavingCard(null)
-  }
+  const handleSave = async (
+    ref: React.RefObject<HTMLDivElement>,
+    key: 'karuta' | 'desc',
+  ): Promise<void> => {
+    if (ref.current === null) return
+    setCardAction(`${key}-save`)
+    try {
+      const dataUrl = await generateCardPng(ref.current)
+      const fileName = buildFileName(key === 'karuta' ? 'karuta_1' : 'karuta_2')
 
-  const handleShareKarutaCard = (): void => {
-    if (karutaCardRef.current === null) return
-    shareCard(karutaCardRef.current, formData.word)
-  }
+      if (isMobile) {
+        const res = await fetch(dataUrl)
+        const blob = await res.blob()
+        const shared = await nativeShare(blob, fileName)
+        if (!shared) downloadPng(dataUrl, fileName)
+        return
+      }
 
-  const handleShareDescCard = (): void => {
-    if (descCardRef.current === null) return
-    shareCard(descCardRef.current, formData.word)
+      downloadPng(dataUrl, fileName)
+    } finally {
+      setCardAction(null)
+    }
   }
 
   const showDescCard = formData.descriptionEnabled && formData.description.trim().length > 0
+  const isbusy = cardAction !== null
+
+  const renderCardButtons = (
+    ref: React.RefObject<HTMLDivElement>,
+    key: 'karuta' | 'desc',
+  ): JSX.Element => (
+    <div className={styles.buttonRow}>
+      <button
+        className={styles.shareButton}
+        onClick={() => shareCard(ref.current!, formData.word)}
+        disabled={isbusy}
+      >
+        <XIcon />ポスト
+      </button>
+      <button
+        className={styles.nativeShareButton}
+        onClick={() => handleShare(ref, key)}
+        disabled={isbusy}
+      >
+        {cardAction === `${key}-share` ? '処理中…' : 'シェア'}
+      </button>
+      <button
+        className={styles.saveButton}
+        onClick={() => handleSave(ref, key)}
+        disabled={isbusy}
+      >
+        {cardAction === `${key}-save` ? '保存中…' : '保存'}
+      </button>
+    </div>
+  )
 
   return (
     <div className={styles.page}>
@@ -78,32 +163,12 @@ function App(): JSX.Element {
           <div className={styles.cardsRow}>
             <div className={styles.cardWrapper}>
               <KarutaCard ref={karutaCardRef} formData={formData} />
-              <div className={styles.buttonRow}>
-                <button className={styles.saveButton} onClick={handleSaveKarutaCard} disabled={savingCard !== null}>
-                  {savingCard === 'karuta' ? '保存中…' : '画像を保存'}
-                </button>
-                <button className={styles.shareButton} onClick={handleShareKarutaCard}>
-                  <XIcon />でシェア
-                </button>
-              </div>
-              <p className={styles.shareNote}>
-                ※先に「画像を保存」してからポストに添付してください
-              </p>
+              {renderCardButtons(karutaCardRef, 'karuta')}
             </div>
             {showDescCard && (
               <div className={styles.cardWrapper}>
                 <DescriptionCard ref={descCardRef} formData={formData} />
-                <div className={styles.buttonRow}>
-                  <button className={styles.saveButton} onClick={handleSaveDescCard} disabled={savingCard !== null}>
-                    {savingCard === 'desc' ? '保存中…' : '画像を保存'}
-                  </button>
-                  <button className={styles.shareButton} onClick={handleShareDescCard}>
-                    <XIcon />でシェア
-                  </button>
-                </div>
-                <p className={styles.shareNote}>
-                  ※先に「画像を保存」してからポストに添付してください
-                </p>
+                {renderCardButtons(descCardRef, 'desc')}
               </div>
             )}
           </div>
@@ -123,7 +188,6 @@ function App(): JSX.Element {
               ただし、本ツールの利用により生じたいかなる損害についても、作成者は一切の責任を負いません。
             </p>
           </details>
-
         </div>
 
         <p className={styles.footerCredit}>
@@ -138,6 +202,10 @@ function App(): JSX.Element {
           </a>
         </p>
       </footer>
+
+      {toast !== null && (
+        <div className={styles.toast}>{toast}</div>
+      )}
     </div>
   )
 }
