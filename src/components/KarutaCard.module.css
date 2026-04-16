@@ -1,0 +1,99 @@
+.card {
+  position: relative;
+  width: 280px;
+  height: 420px;
+  box-sizing: border-box;
+  border: 8px solid #2d6a2d;
+  background-color: #ffffff;
+  overflow: hidden;
+  cursor: grab;
+  flex-shrink: 0;
+  touch-action: none;
+}
+
+.card:active {
+  cursor: grabbing;
+}
+
+.image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  user-select: none;
+  pointer-events: none;
+}
+
+.gradientOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to left, rgba(0, 0, 0, 0.75) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.initialBadge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  border: 2px solid #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Rampart One', cursive;
+  font-size: 40px;
+  color: #fff;
+  pointer-events: none;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+
+.wordVertical {
+  position: absolute;
+  right: 12px;
+  top: 90px;
+  writing-mode: vertical-rl;
+  font-family: 'Rampart One', cursive;
+  font-size: 46px;
+  color: #1a1a1a;
+  line-height: 1.1;
+  pointer-events: none;
+  text-shadow:
+    -3px -3px 0 #fff,
+     0   -3px 0 #fff,
+     3px -3px 0 #fff,
+     3px  0   0 #fff,
+     3px  3px 0 #fff,
+     0    3px 0 #fff,
+    -3px  3px 0 #fff,
+    -3px  0   0 #fff;
+  max-height: 360px;
+  overflow: hidden;
+}
+
+.wordSegment {
+  display: block;
+}
+
+.wordSegmentSpacer {
+  display: block;
+  color: transparent;
+  text-shadow: none;
+}
+
+.hint {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 10px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 20px;
+  padding: 4px 10px;
+  pointer-events: none;
+  letter-spacing: 0.04em;
+  backdrop-filter: blur(4px);
+}
