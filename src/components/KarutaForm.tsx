@@ -3,8 +3,8 @@ import type { KarutaFormData } from '../types/karuta'
 import styles from './KarutaForm.module.css'
 
 const WORD_MAX_LENGTH = 50
-const DESCRIPTION_MAX_LENGTH = 80
-const DESCRIPTION_COLOR_THRESHOLD = 50
+const DESCRIPTION_MAX_LENGTH = 160
+const DESCRIPTION_COLOR_THRESHOLD = 120
 
 interface KarutaFormProps {
   formData: KarutaFormData
@@ -196,7 +196,7 @@ function KarutaForm({ formData, setFormData }: KarutaFormProps): JSX.Element {
             maxLength={DESCRIPTION_MAX_LENGTH}
             value={formData.description}
             onChange={handleDescriptionChange}
-            placeholder="解説文を入力（最大80文字）&#10;例：これは○○というミームです"
+            placeholder="解説文を入力（最大160文字）&#10;例：これは○○というミームです"
             rows={3}
           />
           <span
